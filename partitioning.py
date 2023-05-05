@@ -1,31 +1,23 @@
-import pyspark
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col
+from pyspark.sql.functions import rand
+
+
+spark = SparkSession.builder.appName("PartitionByFeatures").getOrCreate()
 
 # Load data from CSV file
-data = pyspark.read.csv("small_dataset.csv", header=True, inferSchema=True)
+data = spark.read.csv("small_dataset.csv", header=True, inferSchema=True)
 
-print(data)
+features = data.columns
+features.remove('TenYearCHD')
 
-# Partition data based on features into 100 partitions
-partition_cols = ["col1", "col2", ...] # List of feature column names to partition by
-data = data.repartitionByCol(partition_cols, numPartitions=100)
+# partition the DataFrame by features and write to disk
+data.write.partitionBy('TenYearCHD','glucose').mode('overwrite').format('parquet').save("partitioned_data")
 
-# Split data into training and test sets
-train, test = data.randomSplit([0.8, 0.2], seed=42)
+# read the partitioned data from disk
+partitioned_data = spark.read.format('parquet').load("partitioned_data")
 
-# Prepare features and label columns
-features = [col for col in train.columns if col != "label"]
-assembler = VectorAssembler(inputCols=features, outputCol="features")
-train = assembler.transform(train).select("features", "label")
-test = assembler.transform(test).select("features", "label")
+# get the number of partitions of the DataFrame
+num_partitions = partitioned_data.rdd.getNumPartitions()
 
-# Configure d-GLMNET with Lasso regularization
-lr = LogisticRegression(regParam=0.1, elasticNetParam=1.0)
-
-# Fit the model on the training data
-model = lr.fit(train)
-
-# Evaluate the model on the test data
-predictions = model.transform(test)
-evaluator = BinaryClassificationEvaluator()
-auc = evaluator.evaluate(predictions)
-print("AUC = ", auc)
+print("Number of partitions:", num_partitions)
