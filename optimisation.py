@@ -1,9 +1,10 @@
-def compute_partition_avg(iterator):
-    partition_sum = 0
-    partition_count = 0
+import numpy as np
+
+def t(x, a):
+    return np.sign(x) * np.max(abs(x) - a, 0)
+
+def coordinate_descent(iterator,w,z,num_features,beta,lmbd):
+    delta_beta_m = np.zeros(num_features)
     for row in iterator:
-        partition_sum += sum(row)
-        partition_count += len(row)
-    partition_avg = partition_sum / partition_count
-    print("Partition avg: {}".format(partition_avg))
-    yield partition_avg
+        delta_beta_m[row[-1]] = t(np.sum(w * x * q), lmbd) / np.dot(w, x **2) - beta_j
+    yield delta_beta_m

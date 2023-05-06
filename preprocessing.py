@@ -3,12 +3,12 @@
 
 import pandas as pd
 
-data = pd.read_csv('small_dataset.csv').dropna()
+data = pd.read_csv('small_dataset.csv').dropna().head(10)
 
 data = data.transpose()
 
-data.to_csv('processed_dataset.csv', index=False)
-
 data['feature_id'] = [i for i in range(len(data))]
+
+data.to_csv('processed_dataset.csv', index=False)
 
 print(data)
