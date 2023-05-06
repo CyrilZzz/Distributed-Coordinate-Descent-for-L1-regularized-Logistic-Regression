@@ -8,6 +8,14 @@ df = spark.read.csv("processed_dataset.csv", header=True, inferSchema=True)
 
 df.show()
 
+# We extract the vector of labels which will be used in each partition
+labels = df.orderBy(df.columns[-1].desc()).first()
+
+# We remove it from the dataframe before partitioning it
+df = df.drop(df.count()-1)
+
+df.show()
+
 df = df.repartition(10)
 
 

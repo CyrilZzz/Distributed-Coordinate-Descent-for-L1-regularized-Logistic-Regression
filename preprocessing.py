@@ -8,3 +8,7 @@ data = pd.read_csv('small_dataset.csv').dropna()
 data = data.transpose()
 
 data.to_csv('processed_dataset.csv', index=False)
+
+data['feature_id'] = [i for i in range(len(data))]
+
+print(data)
