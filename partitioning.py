@@ -1,23 +1,18 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col
-from pyspark.sql.functions import rand
+
+# Create a SparkSession
+spark = SparkSession.builder.appName("ReadCSV2").getOrCreate()
+
+# Read the CSV file
+df = spark.read.csv("transposed.csv", header=True, inferSchema=True)
+
+df = df.repartition(3)
+
+# print contents of each partition
+partition_data = df.rdd.glom().collect()
+for i, partition in enumerate(partition_data):
+    print("Partition {}: {}".format(i, partition))
 
 
-spark = SparkSession.builder.appName("PartitionByFeatures").getOrCreate()
 
-# Load data from CSV file
-data = spark.read.csv("small_dataset.csv", header=True, inferSchema=True)
-
-features = data.columns
-features.remove('TenYearCHD')
-
-# partition the DataFrame by features and write to disk
-data.write.partitionBy('TenYearCHD','glucose').mode('overwrite').format('parquet').save("partitioned_data")
-
-# read the partitioned data from disk
-partitioned_data = spark.read.format('parquet').load("partitioned_data")
-
-# get the number of partitions of the DataFrame
-num_partitions = partitioned_data.rdd.getNumPartitions()
-
-print("Number of partitions:", num_partitions)
+spark.stop()
