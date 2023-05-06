@@ -1,10 +1,10 @@
 from pyspark.sql import SparkSession
 
 # Create a SparkSession
-spark = SparkSession.builder.appName("ReadCSV2").getOrCreate()
+spark = SparkSession.builder.appName("distributed_lasso").getOrCreate()
 
 # Read the CSV file
-df = spark.read.csv("transposed.csv", header=True, inferSchema=True)
+df = spark.read.csv("processed_dataset.csv", header=True, inferSchema=True)
 
 df.show()
 
@@ -25,6 +25,7 @@ def compute_partition_avg(iterator):
     partition_avg = partition_sum / partition_count
     print("Partition avg: {}".format(partition_avg))
     yield partition_avg
+
 
 # Apply the compute_partition_avg function to each partition and collect the results
 partition_avgs = df.rdd.mapPartitions(compute_partition_avg).collect()
