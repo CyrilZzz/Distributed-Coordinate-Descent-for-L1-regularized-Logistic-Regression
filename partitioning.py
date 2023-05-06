@@ -29,6 +29,7 @@ x = [Vectors.dense([r[0] for r in df.select(observation_id).collect()]) for obse
 
 # Apply sigmoid function to each column and store results in a new vector
 p= Vectors.dense([sigmoid(x_i,beta) for x_i in x])
+
 w = p*(1-p)
 z = ((y+1)/2 - p)/w
 
