@@ -2,9 +2,13 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, expr, udf, array
 from pyspark.ml.linalg import Vectors
 import numpy as np
+from optimization import coordinate_descent, t
 
 # Create a SparkSession
 spark = SparkSession.builder.appName("distributed_lasso").getOrCreate()
+
+# Choose penalty level
+lmbd = 0.5
 
 # Read the CSV file
 df = spark.read.csv("processed_dataset.csv", header=True, inferSchema=True)
@@ -41,23 +45,14 @@ df = df.repartition(5)
 # for i, partition in enumerate(partition_data):
 #     print("Partition {}: {}".format(i, partition))
 
-def compute_partition_avg(iterator):
-    partition_sum = 0
-    partition_count = 0
-    for row in iterator:
-        partition_sum += sum(row)
-        partition_count += len(row)
-    partition_avg = partition_sum / partition_count
-    print("Partition avg: {}".format(partition_avg))
-    yield partition_avg
+# Apply the coordinate_descent function to each partition and sum the results
+delta_beta = sum(df.rdd.mapPartitions(lambda partition: coordinate_descent(partition, w, z, beta, lmbd)).collect())
 
+print(delta_beta)
 
-# Apply the compute_partition_avg function to each partition and collect the results
-partition_avgs = df.rdd.mapPartitions(compute_partition_avg).collect()
-
-# Print the overall average value
-overall_avg = sum(partition_avgs) / len(partition_avgs)
-print("Overall avg: {}".format(overall_avg))
+alpha = 1
+beta = beta + alpha*delta_beta
+print(beta)
 
 
 spark.stop()
