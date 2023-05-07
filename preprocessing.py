@@ -3,7 +3,7 @@
 
 import pandas as pd
 
-data = pd.read_csv('small_dataset.csv').dropna().head(10)
+data = pd.read_csv('small_dataset.csv').dropna().head(300)
 
 data = data.transpose()
 
