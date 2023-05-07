@@ -58,5 +58,17 @@ for iter in range(nb_iter):
 
 print(beta)
 
+def predict(x,beta):
+    probas = [sigmoid(x_i,beta) for x_i in x]
+    return np.where(probas>0.5,1,0)
+
+def accuracy(y_pred,y_test):
+    return sum(y_pred==y_test)/len(y_pred)
+
+# Accuracy on training set (waiting for split)
+y_pred = predict(x,beta)
+
+print(accuracy(y_pred,y))
+
 
 spark.stop()
