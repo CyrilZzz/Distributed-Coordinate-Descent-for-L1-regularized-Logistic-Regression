@@ -34,7 +34,7 @@ def sigmoid(x, beta):
     return 1 / (1 + np.exp(-dot_product))
 
 
-nb_iter = 1000  # fixed number of iterations (for testing)
+nb_iter = 1500  # fixed number of iterations (for testing)
 
 for iter in range(nb_iter):
   
@@ -51,15 +51,15 @@ for iter in range(nb_iter):
     #     print("Partition {}: {}".format(i, partition))
 
     # Apply the coordinate_descent function to each partition and sum the results
-    delta_beta = sum(df.rdd.mapPartitions(lambda partition: coordinate_descent(partition, w, z, beta, lmbd)).collect())
+    delta_beta = sum(df.rdd.mapPartitions(lambda partition: coordinate_descent(partition, x, w, z, beta, lmbd)).collect())
 
-    alpha = 0.1
+    alpha = 0.3
     beta = beta + alpha*delta_beta
 
 print(beta)
 
 def predict(x,beta):
-    probas = [sigmoid(x_i,beta) for x_i in x]
+    probas = np.array([sigmoid(x_i,beta) for x_i in x])
     return np.where(probas>0.5,1,0)
 
 def accuracy(y_pred,y_test):
