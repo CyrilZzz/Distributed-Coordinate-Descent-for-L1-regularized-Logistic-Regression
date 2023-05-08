@@ -2,7 +2,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import expr
 from pyspark.ml.linalg import Vectors
 import numpy as np
-from optimization import coordinate_descent
+from optimization import coordinate_descent, line_search
 
 # Create a SparkSession
 spark = SparkSession.builder.appName("distributed_lasso").getOrCreate()
@@ -47,7 +47,8 @@ for iter in range(nb_iter):
     # Apply the coordinate_descent function to each partition and sum the results
     delta_beta = sum(df.rdd.mapPartitions(lambda partition: coordinate_descent(partition, x, w, z, beta, lmbd)).collect())
 
-    alpha = 0.4
+    alpha = line_search(x, y, 0.01, beta, delta_beta, 0, lmbd, 0.01, 0.5)
+    print(alpha)
     beta = beta + alpha*delta_beta
 
 print(beta)

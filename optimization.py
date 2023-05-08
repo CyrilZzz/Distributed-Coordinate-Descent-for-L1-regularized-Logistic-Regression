@@ -21,7 +21,7 @@ def sigmoid2(x):
     return 1/(1+np.exp(x))
 
 def objective_function(x,y,beta,lmbd):
-    vsoftplus = np.vectorize(softplus(- y * np.matmul(beta,x)))
+    vsoftplus = softplus(- y * np.matmul(x,beta))
     return np.sum(vsoftplus) + lmbd*np.linalg.norm(beta,1)
 
 def line_search(x, y, delta, beta, delta_beta,
@@ -32,10 +32,10 @@ def line_search(x, y, delta, beta, delta_beta,
     # Step 2
     def eval_objective_function(alpha):
         return objective_function(x, y, beta + alpha*delta_beta, lmbd)
-    alpha_init = minimize(eval_objective_function, np.array([0.5]), bounds=((delta, 1),))
+    alpha_init = minimize(eval_objective_function, np.array([0.5]), bounds=((delta, 1),)).x
 
     # Step 3 : Armijo Rule
-    # gradient = np.sum(np.vectorize(sigmoid2(y*np.matmul(beta,x))))
+    # gradient = np.sum(np.vectorize(sigmoid2(y*np.matmul(x,beta))))
     # premier_terme = np.dot(gradient, delta_beta)
     # deuxieme_terme = gamma * np.dot(delta_beta, np.matmul(H_tilde, delta_beta))
     # troisieme_terme = lmbd * (np.linalg.norm(beta + delta_beta, 1) - np.linalg.norm(beta, 1))
