@@ -17,7 +17,8 @@ def coordinate_descent(partition,x,w,z,beta,lmbd):
 
 def line_search(delta, f, beta, delta_beta, delta_L_beta,
                 gamma, H_tilde, lmbd, sigma, b):
-    alpha_init = minimize(f, np.array([0]), bounds=((delta, 1),))
+    """Creuser plus étape 1. de l'algo 3"""
+    alpha_init = minimize(f, np.array([0.5]), bounds=((delta, 1),))
     premier_terme = np.dot(delta_L_beta, delta_beta)
     deuxieme_terme = gamma * np.dot(delta_beta, np.matmul(H_tilde, delta_beta))
     troisieme_terme = lmbd * (np.linalg.norm(beta + delta_beta, 1) - np.linalg.norm(beta, 1))
