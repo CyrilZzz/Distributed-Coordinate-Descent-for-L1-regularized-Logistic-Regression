@@ -2,13 +2,17 @@
 #  for partitioning using Spark
 
 import pandas as pd
+from sklearn.model_selection import train_test_split
 
-data = pd.read_csv('small_dataset.csv').dropna().head(300)
+data = pd.read_csv('small_dataset.csv').dropna().head(500)
 
-data = data.transpose()
+train_data, test_data = train_test_split(data, test_size=0.2, random_state=42)
 
-data['feature_id'] = [i for i in range(len(data))]
+train_data = train_data.transpose()
 
-data.to_csv('processed_dataset.csv', index=False)
+train_data['feature_id'] = [i for i in range(len(train_data))]
 
-print(data)
+train_data.to_csv('train_data.csv', index=False)
+test_data.to_csv('test_data.csv', index=False)
+
+print(train_data)

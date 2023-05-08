@@ -8,10 +8,10 @@ from optimization import coordinate_descent
 spark = SparkSession.builder.appName("distributed_lasso").getOrCreate()
 
 # Choose penalty level
-lmbd = 0.2
+lmbd = 0.8
 
 # Read the CSV file
-df = spark.read.csv("processed_dataset.csv", header=True, inferSchema=True)
+df = spark.read.csv("train_data.csv", header=True, inferSchema=True)
 
 # We extract the vector of labels which will be used in each partition
 y = Vectors.dense(df.tail(1)[0][:-1])
@@ -34,7 +34,7 @@ def sigmoid(x, beta):
     return 1 / (1 + np.exp(-dot_product))
 
 
-nb_iter = 1500  # fixed number of iterations (for testing)
+nb_iter = 500  # fixed number of iterations (for testing)
 
 for iter in range(nb_iter):
   
@@ -44,16 +44,10 @@ for iter in range(nb_iter):
     w = p*(1-p)
     z = ((y+1)/2 - p)/w
 
-
-    # print contents of each partition
-    # partition_data = df.rdd.glom().collect()
-    # for i, partition in enumerate(partition_data):
-    #     print("Partition {}: {}".format(i, partition))
-
     # Apply the coordinate_descent function to each partition and sum the results
     delta_beta = sum(df.rdd.mapPartitions(lambda partition: coordinate_descent(partition, x, w, z, beta, lmbd)).collect())
 
-    alpha = 0.3
+    alpha = 0.4
     beta = beta + alpha*delta_beta
 
 print(beta)
@@ -65,10 +59,19 @@ def predict(x,beta):
 def accuracy(y_pred,y_test):
     return sum(y_pred==y_test)/len(y_pred)
 
-# Accuracy on training set (waiting for split)
-y_pred = predict(x,beta)
+# Accuracy on test set
+test_data = spark.read.csv("test_data.csv", header=True, inferSchema=True)
 
-print(accuracy(y_pred,y))
+y_test = [row.TenYearCHD for row in test_data.select('TenYearCHD').collect()]
+
+test_data = test_data.drop('TenYearCHD')
+rows = test_data.collect()
+x_test = [np.array(row) for row in rows]
+
+
+y_pred = predict(x_test, beta)
+
+print(accuracy(y_pred, y_test))
 
 
 spark.stop()
