@@ -1,6 +1,7 @@
 import numpy as np
 
-def sigmoid(x,beta):
+def sigmoid(x, beta):
+    """x est une observation. Bêta et x vivent dans R^p"""
     return 1 / (1 + np.exp(-np.dot(beta, x)))
 
 
@@ -9,7 +10,7 @@ def update_vector():
 
 
 def t(x, a):
-    return np.sign(x) * np.max(abs(x) - a, 0)
+    return np.sign(x) * max(abs(x) - a, 0)
 
 
 def w(x, beta):
@@ -23,9 +24,14 @@ def z(y, x, beta):
     return num / den
 
 
-def update_coordinate(x, y, beta_):
-    beta_star = t(np.sum(w * x * q), lmbd) / np.dot(w, x **2) - beta_j
+def q():
+    return z - np.dot(delta_beta, x) + (beta + delta_beta) * x_i_j
 
 
+def update_coordinate(matrice_x, y, beta, j, lmbd):
+    """matrice_x est la matrice des observations"""
+    w = w(x, beta_j)
+    u = np.sum(w * x * q)
+    delta_beta_star = t(u, lmbd) / np.dot(w, x **2) - beta_j
 
-
+    return delta_beta_star
