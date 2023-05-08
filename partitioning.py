@@ -8,7 +8,7 @@ from optimization import coordinate_descent, line_search
 spark = SparkSession.builder.appName("distributed_lasso").getOrCreate()
 
 # Choose penalty level
-lmbd = 0.2
+lmbd = 0.5
 
 # Read the CSV file
 df = spark.read.csv("train_data.csv", header=True, inferSchema=True)
@@ -34,7 +34,7 @@ def sigmoid(x, beta):
     return 1 / (1 + np.exp(-dot_product))
 
 
-nb_iter = 50  # fixed number of iterations (for testing)
+nb_iter = 5  # fixed number of iterations (for testing)
 
 for iter in range(nb_iter):
   
