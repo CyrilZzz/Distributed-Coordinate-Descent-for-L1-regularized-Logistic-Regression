@@ -26,24 +26,17 @@ def objective_function(x,y,beta,lmbd):
 
 def line_search(x, y, delta, beta, delta_beta,
                 gamma, lmbd, sigma, b):
-    """Creuser plus étape 1. de l'algo 3
-    calculer de delta_L_beta dans la fonction
-    calcul de la hessienne H_tilde : cf equation (3)"""
     # Step 2
     def eval_objective_function(alpha):
         return objective_function(x, y, beta + alpha*delta_beta, lmbd)
     alpha_init = minimize(eval_objective_function, np.array([0.5]), bounds=((delta, 1),)).x
 
     # Step 3 : Armijo Rule
-    # gradient = np.sum(np.vectorize(sigmoid2(y*np.matmul(x,beta))))
-    # premier_terme = np.dot(gradient, delta_beta)
-    # deuxieme_terme = gamma * np.dot(delta_beta, np.matmul(H_tilde, delta_beta))
-    # troisieme_terme = lmbd * (np.linalg.norm(beta + delta_beta, 1) - np.linalg.norm(beta, 1))
-    # D = premier_terme + deuxieme_terme + troisieme_terme
-    # alpha = alpha_init
-    # for j in range(10**5):
-    #     alpha_candidat = alpha_init * b**j
-    #     if f(beta + alpha_candidat * delta_beta) <= f(beta) + alpha_candidat * sigma * D:
-    #         if alpha_candidat > alpha:
-    #             alpha = alpha_candidat
-    return alpha_init
+    gradient = np.sum(sigmoid2(y*np.matmul(x,beta)))*beta
+    D = np.dot(gradient, delta_beta) + lmbd * (np.linalg.norm(beta + delta_beta, 1) - np.linalg.norm(beta, 1))
+    alpha = alpha_init
+    j = 0
+    while eval_objective_function(alpha) > eval_objective_function(0) + alpha * sigma * D:
+        j += 1
+        alpha = alpha_init * (b**j)
+    return alpha
