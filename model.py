@@ -2,7 +2,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import expr
 from pyspark.ml.linalg import Vectors
 import numpy as np
-from optimization import coordinate_descent, line_search
+from optimization import coordinate_descent, line_search, objective_function
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
@@ -49,9 +49,9 @@ class Distributed_Lasso_LogReg:
 
         df = df.repartition(self.n_partitions)
 
-        nb_iter = 10  # fixed number of iterations (for testing)
+        max_iter = 100
 
-        for iter in range(nb_iter):
+        for iter in range(max_iter):
 
             # Apply sigmoid function to each column and store results in a new vector
             p = Vectors.dense([self.sigmoid(x_i, self.beta) for x_i in x])
@@ -63,6 +63,10 @@ class Distributed_Lasso_LogReg:
             delta_beta = sum(df.rdd.mapPartitions(lambda partition: coordinate_descent(partition, x, w, z, self.beta, self.lmbd)).collect())
 
             alpha = line_search(x, y, 0.01, self.beta, delta_beta, 0, self.lmbd, 0.01, 0.5)
+            if abs(objective_function(x,y,self.beta + alpha*delta_beta,self.lmbd)/objective_function(x,y,self.beta,self.lmbd) - 1) < 10**(-5):
+                self.beta = self.beta + alpha*delta_beta
+                print('early_stop')
+                break
             self.beta = self.beta + alpha*delta_beta
 
     def predict(self, test_file):
