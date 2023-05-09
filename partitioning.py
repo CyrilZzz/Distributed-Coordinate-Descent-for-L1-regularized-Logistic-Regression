@@ -34,7 +34,7 @@ def sigmoid(x, beta):
     return 1 / (1 + np.exp(-dot_product))
 
 
-nb_iter = 5  # fixed number of iterations (for testing)
+nb_iter = 100  # fixed number of iterations (for testing)
 
 for iter in range(nb_iter):
   
@@ -55,7 +55,7 @@ print(beta)
 
 def predict(x,beta):
     probas = np.array([sigmoid(x_i,beta) for x_i in x])
-    return np.where(probas>0.5,1,0)
+    return np.where(probas>0.5,1,-1)
 
 def accuracy(y_pred,y_test):
     return sum(y_pred==y_test)/len(y_pred)

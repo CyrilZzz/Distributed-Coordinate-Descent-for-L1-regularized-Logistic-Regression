@@ -4,7 +4,9 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-data = pd.read_csv('small_dataset.csv').dropna().head(500)
+data = pd.read_csv('small_dataset.csv').dropna()
+
+data['TenYearCHD'] = data['TenYearCHD'].apply(lambda x: 2*x - 1)
 
 train_data, test_data = train_test_split(data, test_size=0.2, random_state=42)
 

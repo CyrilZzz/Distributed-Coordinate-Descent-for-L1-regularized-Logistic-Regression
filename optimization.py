@@ -26,9 +26,11 @@ def objective_function(x,y,beta,lmbd):
 
 def line_search(x, y, delta, beta, delta_beta,
                 gamma, lmbd, sigma, b):
-    # Step 2
     def eval_objective_function(alpha):
         return objective_function(x, y, beta + alpha*delta_beta, lmbd)
+    # Step 1
+    #print(eval_objective_function(1)/objective_function(x, y, beta, lmbd) - 1)
+    # Step 2
     alpha_init = minimize(eval_objective_function, np.array([0.5]), bounds=((delta, 1),)).x
 
     # Step 3 : Armijo Rule
