@@ -9,8 +9,8 @@ def t(x, a):
 def coordinate_descent(partition,x,w,z,beta,lmbd):
     delta_beta = np.zeros(len(beta))
     for row in partition:
-        x_j = Vectors.dense(row[:-1])  # -1 not take the feature_id
-        q = z - [np.dot(delta_beta,x_i) for x_i in x] + beta[row[-1]]*x_j  # to be checked
+        x_j = Vectors.dense(row[:-1])  # Remove the feature_id
+        q = z - [np.dot(delta_beta,x_i) for x_i in x] + beta[row[-1]]*x_j
         delta_beta[row[-1]] = t(np.sum(w * x_j * q), lmbd) / np.dot(w, np.power(x_j, 2)) - beta[row[-1]]
     yield delta_beta
 
@@ -28,12 +28,10 @@ def line_search(x, y, delta, beta, delta_beta,
                 gamma, lmbd, sigma, b):
     def eval_objective_function(alpha):
         return objective_function(x, y, beta + alpha*delta_beta, lmbd)
-    # Step 1
-    #print(eval_objective_function(1)/objective_function(x, y, beta, lmbd) - 1)
-    # Step 2
+    # Initialize the sequence (step 2 from algorithm 3 in the original paper)
     alpha_init = minimize(eval_objective_function, np.array([0.5]), bounds=((delta, 1),)).x
 
-    # Step 3 : Armijo Rule
+    # Armijo Rule
     gradient = np.sum(sigmoid2(y*np.matmul(x,beta)))*beta
     D = np.dot(gradient, delta_beta) + lmbd * (np.linalg.norm(beta + delta_beta, 1) - np.linalg.norm(beta, 1))
     alpha = alpha_init

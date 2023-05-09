@@ -4,17 +4,26 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-data = pd.read_csv('small_dataset.csv').dropna()
+data = pd.read_csv('small_dataset.csv')
 
-data['TenYearCHD'] = data['TenYearCHD'].apply(lambda x: 2*x - 1)
 
-train_data, test_data = train_test_split(data, test_size=0.2, random_state=42)
+def preprocessing(data, label_column):
 
-train_data = train_data.transpose()
+    data.dropna(inplace=True)
 
-train_data['feature_id'] = [i for i in range(len(train_data))]
+    data.insert(0, 'constant', [1 for i in range(len(data))])
 
-train_data.to_csv('train_data.csv', index=False)
-test_data.to_csv('test_data.csv', index=False)
+    data[label_column] = data[label_column].apply(lambda x: 2*x - 1)
 
-print(train_data)
+    train_data, test_data = train_test_split(data, test_size=0.2, random_state=42)
+
+    train_data = train_data.transpose()
+
+    train_data['feature_id'] = [i for i in range(len(train_data))]
+
+    train_data.to_csv('train_data.csv', index=False)
+    test_data.to_csv('test_data.csv', index=False)
+
+    return train_data, test_data
+
+print(preprocessing(data, 'TenYearCHD')[0])
