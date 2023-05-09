@@ -70,9 +70,9 @@ class Distributed_Lasso_LogReg:
         # Read the CSV file
         test_data = spark.read.csv(test_file, header=True, inferSchema=True)
 
-        y_test = [row.TenYearCHD for row in test_data.select('TenYearCHD').collect()]
+        y_test = [row[test_data.columns[-1]] for row in test_data.select(test_data.columns[-1]).collect()]
 
-        test_data = test_data.drop('TenYearCHD')
+        test_data = test_data.drop(test_data.columns[-1])
         rows = test_data.collect()
         x_test = [np.array(row) for row in rows]
 
