@@ -99,13 +99,10 @@ class DistributedLassoLogReg:
     def accuracy(y_pred, y_test):
         return sum(y_pred == y_test)/len(y_pred)
 
-    def stop_spark(self):
-        self.spark.stop()
-
 
 data = pd.read_csv('small_dataset.csv')
 
-model = DistributedLassoLogReg(5)
+model = DistributedLassoLogReg(10)
 model.preprocessing(data, 'TenYearCHD')
 model.fit('train_data.csv')
 model.predict('test_data.csv')
