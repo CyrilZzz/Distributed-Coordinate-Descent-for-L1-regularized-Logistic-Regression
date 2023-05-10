@@ -5,18 +5,21 @@ import numpy as np
 from optimization import coordinate_descent, line_search, objective_function
 import pandas as pd
 from sklearn.model_selection import train_test_split
+import time
 
 
-class Distributed_Lasso_LogReg:
-    def __init__(self, n_partitions, lmbd=1):
+class DistributedLassoLogReg:
+    def __init__(self, n_partitions, lmbd=1, max_iter=500):
         self.lmbd = lmbd
         self.n_partitions = n_partitions
+        self.max_iter = max_iter
         self.beta = None
 
-    def preprocessing(self, data, label_column):
+    @staticmethod
+    def preprocessing(data, label_column):
         data.dropna(inplace=True)
-        data.insert(0, 'constant', [1 for i in range(len(data))])
-        data[label_column] = data[label_column].apply(lambda x: 2*x - 1)
+        data.insert(0, 'constant', [1]*len(data))
+        data[label_column] = data[label_column].apply(lambda x: 2 * x - 1)
 
         train_data, test_data = train_test_split(data, test_size=0.2, random_state=42)
 
@@ -26,7 +29,6 @@ class Distributed_Lasso_LogReg:
         train_data.to_csv('train_data.csv', index=False)
         test_data.to_csv('test_data.csv', index=False)
 
-        return train_data, test_data
 
     def fit(self, train_file):
         spark = SparkSession.builder.appName("training").getOrCreate()
@@ -45,29 +47,29 @@ class Distributed_Lasso_LogReg:
         observation_ids = df.columns
         observation_ids.remove('feature_id')
 
-        x = [Vectors.dense([r[0] for r in df.select(observation_id).collect()]) for observation_id in observation_ids]
+        cols = df.select(*observation_ids).collect()
+        x = [Vectors.dense([r[i] for r in cols]) for i in range(len(observation_ids))]
 
         df = df.repartition(self.n_partitions)
 
-        max_iter = 100
-
-        for iter in range(max_iter):
+        for iter in range(self.max_iter):
 
             # Apply sigmoid function to each column and store results in a new vector
             p = Vectors.dense([self.sigmoid(x_i, self.beta) for x_i in x])
 
-            w = p*(1-p)
-            z = ((y+1)/2 - p)/w
+            w = p * (1-p)
+            z = ((y+1) / 2 - p) / w
 
             # Apply the coordinate_descent function to each partition and sum the results
-            delta_beta = sum(df.rdd.mapPartitions(lambda partition: coordinate_descent(partition, x, w, z, self.beta, self.lmbd)).collect())
+            delta_beta = sum(df.rdd.mapPartitions(lambda partition: coordinate_descent(
+                partition, x, w, z, self.beta, self.lmbd)).collect())
 
             alpha = line_search(x, y, 0.01, self.beta, delta_beta, 0, self.lmbd, 0.01, 0.5)
-            if abs(objective_function(x,y,self.beta + alpha*delta_beta,self.lmbd)/objective_function(x,y,self.beta,self.lmbd) - 1) < 10**(-5):
-                self.beta = self.beta + alpha*delta_beta
-                print('early_stop')
+            if abs(objective_function(x,y,self.beta + alpha*delta_beta, self.lmbd) \
+                    / objective_function(x, y, self.beta, self.lmbd) - 1) < 10 ** -4:
+                self.beta = self.beta + alpha * delta_beta
                 break
-            self.beta = self.beta + alpha*delta_beta
+            self.beta = self.beta + alpha * delta_beta
 
     def predict(self, test_file):
         spark = SparkSession.builder.appName("testing").getOrCreate()
@@ -90,9 +92,8 @@ class Distributed_Lasso_LogReg:
         return np.where(probas > 0.5, 1, -1)
 
     @staticmethod
-    def sigmoid(x, beta):
-        dot_product = sum(xi * bi for xi, bi in zip(x, beta))
-        return 1 / (1 + np.exp(-dot_product))
+    def sigmoid(x_i, beta):
+        return 1 / (1 + np.exp(- np.dot(x_i, beta)))
 
     @staticmethod
     def accuracy(y_pred, y_test):
@@ -104,9 +105,8 @@ class Distributed_Lasso_LogReg:
 
 data = pd.read_csv('small_dataset.csv')
 
-model = Distributed_Lasso_LogReg(5)
-train, test = model.preprocessing(data, 'TenYearCHD')
-
+model = DistributedLassoLogReg(5)
+model.preprocessing(data, 'TenYearCHD')
 model.fit('train_data.csv')
 model.predict('test_data.csv')
 print(model.beta)
