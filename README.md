@@ -11,5 +11,3 @@ Model training: the data is partitioned and processed in parallel across multipl
 Model testing and evaluation: the trained model is used to make predictions on the test set. The accuracy of the model is computed as the ratio of correct predictions to total predictions.
 
 The code is designed to be run on a distributed computing cluster using PySpark. It requires a SparkSession to be created and a CSV file containing the training and testing data to be provided as input. The code can be modified to change the Lasso regularization parameter and the maximum number of iterations.
-
-The DistributedLassoLogReg class can be used as a basis for building more complex distributed machine learning algorithms using PySpark. The code can be optimized further by using more efficient optimization algorithms and by tuning the hyperparameters of the model.
