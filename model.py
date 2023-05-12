@@ -19,7 +19,10 @@ class DistributedLassoLogReg:
     def preprocessing(data, label_column):
         data.dropna(inplace=True)
         data.insert(0, 'constant', [1]*len(data))
-        data[label_column] = data[label_column].apply(lambda x: 2 * x - 1)
+        if 0 in data[label_column].unique():
+            data[label_column] = data[label_column].apply(lambda x: 2 * x - 1)
+        if '.' in label_column:  # There is an issue to extract the values of a column that includes a . in its name
+            data.rename(columns={label_column : label_column.replace('.', '_')}, inplace=True)
 
         train_data, test_data = train_test_split(data, test_size=0.2, random_state=42)
 
@@ -100,10 +103,10 @@ class DistributedLassoLogReg:
         return sum(y_pred == y_test)/len(y_pred)
 
 
-data = pd.read_csv('small_dataset.csv')
+data = next(pd.read_csv('PUF.csv', chunksize=20000))
 
-model = DistributedLassoLogReg(10)
-model.preprocessing(data, 'TenYearCHD')
+model = DistributedLassoLogReg(50)
+model.preprocessing(data, '1.60')
 model.fit('train_data.csv')
-model.predict('test_data.csv')
 print(model.beta)
+model.predict('test_data.csv')
