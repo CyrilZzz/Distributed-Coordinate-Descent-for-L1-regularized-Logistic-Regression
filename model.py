@@ -103,10 +103,14 @@ class DistributedLassoLogReg:
         return sum(y_pred == y_test)/len(y_pred)
 
 
-data = next(pd.read_csv('PUF.csv', chunksize=20000))
+#data = pd.read_csv('small_dataset.csv')
 
-model = DistributedLassoLogReg(50)
-model.preprocessing(data, '1.60')
-model.fit('train_data.csv')
-print(model.beta)
-model.predict('test_data.csv')
+for i in range(1, 17, 3):
+    model = DistributedLassoLogReg(i)
+    #model.preprocessing(data, 'TenYearCHD')
+    start_time = time.time()
+    model.fit('train_data.csv')
+    end_time = time.time()
+    print(f"Elapsed time ({i}): {end_time-start_time} seconds")
+    #print(model.beta)
+    model.predict('test_data.csv')
