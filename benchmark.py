@@ -3,7 +3,7 @@ from sklearn.model_selection import train_test_split
 import pandas as pd
 
 # load the data
-df = pd.read_csv('small_dataset.csv').dropna()
+df = pd.read_csv('dataset.csv').dropna()
 
 # split into train and test sets
 X_train, X_test, y_train, y_test = train_test_split(df.iloc[:,:-1], df['TenYearCHD'], test_size=0.2, random_state=42)

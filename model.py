@@ -3,9 +3,7 @@ from pyspark.sql.functions import expr
 from pyspark.ml.linalg import Vectors
 import numpy as np
 from optimization import coordinate_descent, line_search, objective_function
-import pandas as pd
 from sklearn.model_selection import train_test_split
-import time
 
 
 class DistributedLassoLogReg:
@@ -64,8 +62,8 @@ class DistributedLassoLogReg:
             z = ((y+1) / 2 - p) / w
 
             # Apply the coordinate_descent function to each partition and sum the results
-            delta_beta = sum(df.rdd.mapPartitions(lambda partition: coordinate_descent(
-                partition, x, w, z, self.beta, self.lmbd)).collect())
+            delta_beta = df.rdd.mapPartitions(lambda partition: coordinate_descent(
+            partition, x, w, z, self.beta, self.lmbd)).reduce(lambda x, y: x + y)
 
             alpha = line_search(x, y, 0.01, self.beta, delta_beta, 0, self.lmbd, 0.01, 0.5)
             if abs(objective_function(x,y,self.beta + alpha*delta_beta, self.lmbd) \
@@ -101,16 +99,3 @@ class DistributedLassoLogReg:
     @staticmethod
     def accuracy(y_pred, y_test):
         return sum(y_pred == y_test)/len(y_pred)
-
-
-#data = pd.read_csv('small_dataset.csv')
-
-for i in range(1, 17, 3):
-    model = DistributedLassoLogReg(i)
-    #model.preprocessing(data, 'TenYearCHD')
-    start_time = time.time()
-    model.fit('train_data.csv')
-    end_time = time.time()
-    print(f"Elapsed time ({i}): {end_time-start_time} seconds")
-    #print(model.beta)
-    model.predict('test_data.csv')
