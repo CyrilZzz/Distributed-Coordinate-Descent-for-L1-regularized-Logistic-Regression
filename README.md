@@ -1,5 +1,7 @@
 # Distributed Coordinate Descent for L1-regularized Logistic Regression
 
+Our work is inspired by the following article: https://arxiv.org/pdf/1411.6520v1.pdf
+
 The DistributedLassoLogReg class (in model.py) implements a distributed version of Lasso Logistic Regression using PySpark, a distributed computing framework for big data processing. The objective of the algorithm is to train a model for binary classification that predicts the probability of a binary response variable (target variable) given a set of input variables (features). The Lasso regularization is used to select a subset of relevant features and to avoid overfitting.
 
 The code performs the following steps:
